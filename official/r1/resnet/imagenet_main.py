@@ -43,6 +43,7 @@ NUM_IMAGES = {
 
 _NUM_TRAIN_FILES = 1024
 _SHUFFLE_BUFFER = 10000
+_CYCLE_LENGTH = 20
 
 DATASET_NAME = 'ImageNet'
 
@@ -211,9 +212,9 @@ def input_fn(is_training,
   # CPU cores.
   dataset = dataset.interleave(
       tf.data.TFRecordDataset,
-      cycle_length=10,
+      cycle_length=_CYCLE_LENGTH,
       num_parallel_calls=tf.data.experimental.AUTOTUNE)
-
+  logging.info("CYCLE LENGTH = %d", _CYCLE_LENGTH)
   return resnet_run_loop.process_record_dataset(
       dataset=dataset,
       is_training=is_training,

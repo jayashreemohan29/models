@@ -27,7 +27,7 @@ import functools
 import math
 import multiprocessing
 import os
-
+import time
 from absl import flags
 from absl import logging
 import tensorflow as tf
@@ -700,9 +700,10 @@ def resnet_main(
       schedule = [flags_obj.epochs_between_evals for _ in range(int(n_loops))]
       schedule[-1] = train_epochs - sum(schedule[:-1])  # over counting.
 
+    dur_list = []
     for cycle_index, num_train_epochs in enumerate(schedule):
       logging.info('Starting cycle: %d/%d', cycle_index, int(n_loops))
-
+      stime = time.time()
       if num_train_epochs:
         # Since we are calling classifier.train immediately in each loop, the
         # value of num_train_epochs in the lambda function will not be changed
@@ -725,10 +726,16 @@ def resnet_main(
                                          steps=flags_obj.max_train_steps)
 
       benchmark_logger.log_evaluation_result(eval_results)
+      dur = time.time() - stime
+      dur_list.append(dur)
+      logging.info('DUR FOR EPOCH = %d', dur)
 
       if model_helpers.past_stop_threshold(
           flags_obj.stop_threshold, eval_results['accuracy']):
         break
+
+  for i in dur_list:
+      logging.info('Time_stat = %d', i)
 
   if flags_obj.export_dir is not None:
     # Exports a saved model for the given classifier.
